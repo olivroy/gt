@@ -3204,11 +3204,6 @@ cols_move <- function(
     )
   }
 
-  # Stop function if no `columns` are provided
-  if (length(columns) == 0) {
-    cli::cli_abort("Columns must be provided.")
-  }
-
   # Stop function if any of the `columns` don't exist in `vars`
   if (!all(columns %in% vars)) {
     cli::cli_abort(
@@ -3335,11 +3330,6 @@ cols_move_to_start <- function(
       data = data
     )
 
-  # Stop function if no `columns` are provided
-  if (length(columns) == 0) {
-    cli::cli_abort("Columns must be provided.")
-  }
-
   # Stop function if any of the `columns` don't exist in `vars`
   if (!all(columns %in% vars)) {
     cli::cli_abort(
@@ -3459,11 +3449,6 @@ cols_move_to_end <- function(
       expr = {{ columns }},
       data = data
     )
-
-  # Stop function if no `columns` are provided
-  if (length(columns) == 0) {
-    cli::cli_abort("Columns must be provided.")
-  }
 
   # Stop function if any of the `columns` don't exist in `vars`
   if (!all(columns %in% vars)) {

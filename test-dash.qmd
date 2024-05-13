@@ -1,0 +1,32 @@
+---
+title: "dash-test"
+format: dashboard
+editor: visual
+editor_options: 
+  chunk_output_type: console
+---
+
+```{r}
+pkgload::load_all("~/Documents/rrr-forks/gt")
+library(dplyr)
+```
+
+## Heading
+
+```{r}
+#| title: a title0
+my_gt <- exibble |> 
+ gt() |>
+  cols_label(
+    num = md("<abbr title='Average of numbers'</abbr> average")
+  )
+
+my_gt
+```
+
+## heading
+
+```{r}
+#| title: a title
+gt(exibble)
+```

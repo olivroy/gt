@@ -1,4 +1,4 @@
-skip_on_ci()
+skip_on_cran()
 
 #' @title Add gt table into a Word document
 #' @description Add a gt into a Word document.

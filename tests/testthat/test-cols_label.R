@@ -154,3 +154,85 @@ test_that("cols_label() deals well with partial matching", {
       )
   )
 })
+
+test_that("cols_label() works with `md()`/`html()`", {
+
+    # Expect the rendered column labels to be
+    # exactly as provided
+    tab2 <- tab %>%
+      tab_spanner(
+        label = "date/time",
+        columns = c(date, time, datetime)
+      ) %>%
+      cols_label(
+        num  = "Number",
+        char = "Character",
+        fctr = "Factor",
+        date = "Date",
+        time = "Time",
+        datetime = "Date-Time",
+        currency = "Currency"
+      )
+    expect_match_html(
+      tab2,
+      c(">Number<", ">Character<", ">Factor<", ">Date<", ">Time<", ">Date-Time<", ">Currency<")
+    )
+
+    # Expect the rendered column labels to be in
+    # HTML (through Markdown formatting)
+    tab3 <- tab %>%
+      tab_spanner(
+        label = "date/time",
+        columns = c(date, time, datetime)
+      ) %>%
+      cols_label(
+        num  = md("**Number**"),
+        char = md("`Character`"),
+        fctr = md("*Factor*"),
+        date = md("**Date**"),
+        time = md("`Time`"),
+        datetime = md("*Date-Time*"),
+        currency = md("**Currency**")
+      )
+    expect_match_html(
+      tab3,
+      c(
+        "><strong>Number</strong><",
+        "><code>Character</code><",
+        "><em>Factor</em><",
+        "><strong>Date</strong><",
+        "><code>Time</code><",
+        "><em>Date-Time</em><",
+        "><strong>Currency</strong><"
+      )
+    )
+
+    # Expect the rendered column labels to be in
+    # HTML (through HTML formatting)
+    tab4 <- tab %>%
+      tab_spanner(
+        label = "date/time",
+        columns = c(date, time, datetime)
+      ) %>%
+      cols_label(
+        num  = html("<strong>Number</strong>"),
+        char = html("<code>Character</code>"),
+        fctr = html("<em>Factor</em>"),
+        date = html("<strong>Date</strong>"),
+        time = html("<code>Time</code>"),
+        datetime = html("<em>Date-Time</em>"),
+        currency = html("<strong>Currency</strong>")
+      )
+    expect_match_html(
+      tab4,
+      c(
+        "><strong>Number</strong><",
+        "><code>Character</code><",
+        "><em>Factor</em><",
+        "><strong>Date</strong><",
+        "><code>Time</code><",
+        "><em>Date-Time</em><",
+        "><strong>Currency</strong><"
+      )
+    )
+})

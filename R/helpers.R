@@ -712,70 +712,8 @@ stub <- function() {
   x
 }
 
-#' Select helper for targeting the row group column
-#'
-#' @description
-#'
-#' Should you need to target only the row group column for column-width
-#' declarations (i.e., when `row_group_as_column = TRUE` is set in the initial
-#' [gt()] call), the `row_group()` select helper can be used. This shorthand
-#' makes it so you don't have to use the name of the column that was selected
-#' as the row group column.
-#'
-#' @return A character vector of class `"row_group_column"`.
-#'
-#' @section Examples:
-#'
-#' Create a tibble that has a `row` column (values from `1` to `6`), a `group`
-#' column, and a `vals` column (containing the same values as in `row`).
-#'
-#' ```r
-#' tbl <-
-#'   dplyr::tibble(
-#'     row = 1:6,
-#'     group = c(rep("Group A", 3), rep("Group B", 3)),
-#'     vals = 1:6
-#'   )
-#' ```
-#'
-#' Create a **gt** table with a two-column stub (incorporating the `row` and
-#' `group` columns in that). We can set the widths of the two columns in the
-#' stub with the `row_group()` and [stub()] helpers on the LHS of the
-#' expressions passed to [cols_width()].
-#'
-#' ```r
-#' tbl |>
-#'   gt(
-#'     rowname_col = "row",
-#'     groupname_col = "group",
-#'     row_group_as_column = TRUE
-#'   ) |>
-#'   fmt_roman(columns = stub()) |>
-#'   cols_width(
-#'     row_group() ~ px(200),
-#'     stub() ~ px(100),
-#'     vals ~ px(50)
-#'   )
-#' ```
-#'
-#' \if{html}{\out{
-#' `r man_get_image_tag(file = "man_row_group_1.png")`
-#' }}
-#'
-#' @family helper functions
-#' @section Function ID:
-#' 8-11
-#'
-#' @section Function Introduced:
-#' `v0.11.0`
-#'
-#' @export
-row_group <- function() {
-  x <- "::row_group::"
-  class(x) <- "row_group_column"
-  x
-}
 
+#  Locations helpers -----------------------------------------------------------
 #' Location helper for targeting the table title and subtitle
 #'
 #' @description
@@ -1253,7 +1191,7 @@ cells_stub <- function(rows = everything()) {
 #'
 #' @param columns *Columns to target*
 #'
-#'   `<column-targeting expression>` // *default:* `everything()`
+#'   [`<column-targeting expression>`][rows-columns] // *default:* `everything()`
 #'
 #'   The columns to which targeting operations are constrained. Can either
 #'   be a series of column names provided in `c()`, a vector of column indices,
@@ -1262,7 +1200,7 @@ cells_stub <- function(rows = everything()) {
 #'
 #' @param rows *Rows to target*
 #'
-#'   `<row-targeting expression>` // *default:* `everything()`
+#'   [`<row-targeting expression>`][rows-columns] // *default:* `everything()`
 #'
 #'   In conjunction with `columns`, we can specify which of their rows should
 #'   form a constraint for targeting operations. The default [everything()]
@@ -1273,33 +1211,6 @@ cells_stub <- function(rows = everything()) {
 #'   filter down to the rows we need (e.g., `[colname_1] > 100 & [colname_2] < 50`).
 #'
 #' @return A list object with the classes `cells_body` and `location_cells`.
-#'
-#' @section Targeting cells with `columns` and `rows`:
-#'
-#' Targeting of values is done through `columns` and additionally by `rows` (if
-#' nothing is provided for `rows` then entire columns are selected). The
-#' `columns` argument allows us to target a subset of cells contained in the
-#' resolved columns. We say resolved because aside from declaring column names
-#' in `c()` (with bare column names or names in quotes) we can use
-#' **tidyselect**-style expressions. This can be as basic as supplying a select
-#' helper like `starts_with()`, or, providing a more complex incantation like
-#'
-#' `where(~ is.numeric(.x) && max(.x, na.rm = TRUE) > 1E6)`
-#'
-#' which targets numeric columns that have a maximum value greater than
-#' 1,000,000 (excluding any `NA`s from consideration).
-#'
-#' Once the columns are targeted, we may also target the `rows` within those
-#' columns. This can be done in a variety of ways. If a stub is present, then we
-#' potentially have row identifiers. Those can be used much like column names in
-#' the `columns`-targeting scenario. We can use simpler **tidyselect**-style
-#' expressions (the select helpers should work well here) and we can use quoted
-#' row identifiers in `c()`. It's also possible to use row indices (e.g.,
-#' `c(3, 5, 6)`) though these index values must correspond to the row numbers of
-#' the input data (the indices won't necessarily match those of rearranged rows
-#' if row groups are present). One more type of expression is possible, an
-#' expression that takes column values (can involve any of the available columns
-#' in the table) and returns a logical vector.
 #'
 #' @section Examples:
 #'
@@ -1935,6 +1846,7 @@ cells_source_notes <- function() {
   cells
 }
 
+# Styling helpers --------------------------------------------------------------
 #' Helper for defining custom text styles for table cells
 #'
 #' @description
@@ -2570,131 +2482,7 @@ random_id <- function(n = 10) {
   paste(sample(letters, n, replace = TRUE), collapse = "")
 }
 
-latex_special_chars <- c(
-  "\\" = "\\textbackslash{}",
-  "~" = "\\textasciitilde{}",
-  "^" = "\\textasciicircum{}",
-  "&" = "\\&",
-  "%" = "\\%",
-  "$" = "\\$",
-  "#" = "\\#",
-  "_" = "\\_",
-  "{" = "\\{",
-  "}" = "\\}"
-)
-
-#' Perform LaTeX escaping
-#'
-#' @description
-#'
-#' Text may contain several characters with special meanings in LaTeX.
-#' `escape_latex()` will transform a character vector so that it is safe to use
-#' within LaTeX tables.
-#'
-#' @param text *LaTeX text*
-#'
-#'   `vector<character>` // **required**
-#'
-#'   A character vector containing the text that is to be LaTeX-escaped.
-#'
-#' @return A character vector.
-#'
-#' @family helper functions
-#' @section Function ID:
-#' 8-29
-#'
-#' @section Function Introduced:
-#' `v0.2.0.5` (March 31, 2020)
-#'
-#' @export
-escape_latex <- function(text) {
-
-  if (length(text) < 1) return(text)
-
-  # If all text elements are `NA_character_` then return `text` unchanged
-  if (all(is.na(text))) {
-    return(text)
-  }
-
-  # Determine the elements of `text` that are `NA_character_`
-  na_text <- is.na(text)
-
-  m <- gregexpr("[\\\\&%$#_{}~^]", text[!na_text], perl = TRUE)
-
-  special_chars <- regmatches(text[!na_text], m)
-
-  escaped_chars <-
-    lapply(special_chars, function(x) {
-      latex_special_chars[x]
-    })
-
-  regmatches(text[!na_text], m) <- escaped_chars
-  text
-}
-
-#' Get the LaTeX dependencies required for a **gt** table
-#'
-#' @description
-#'
-#' When working with Rnw (Sweave) files or otherwise writing LaTeX code,
-#' including a **gt** table can be problematic if we don't have knowledge
-#' of the LaTeX dependencies. For the most part, these dependencies are the
-#' LaTeX packages that are required for rendering a **gt** table.
-#' `gt_latex_dependencies()` provides an object that can be used to provide the
-#' LaTeX in an Rnw file, allowing **gt** tables to work and not yield errors
-#' due to missing packages.
-#'
-#' @details
-#' Here is an example Rnw document that shows how `gt_latex_dependencies()`
-#' can be used in conjunction with a **gt** table:
-#'
-#' \preformatted{
-#' \%!sweave=knitr
-#'
-#' \documentclass{article}
-#'
-#' <<echo=FALSE>>=
-#' library(gt)
-#'  @
-#'
-#' <<results='asis', echo=FALSE>>=
-#' gt_latex_dependencies()
-#'  @
-#'
-#' \begin{document}
-#'
-#' <<results='asis', echo=FALSE>>=
-#' gt(exibble)
-#'  @
-#'
-#' \end{document}
-#' }
-#'
-#' @return An object of class `knit_asis`.
-#'
-#' @family helper functions
-#' @section Function ID:
-#' 8-30
-#'
-#' @section Function Introduced:
-#' `v0.2.0.5` (March 31, 2020)
-#'
-#' @export
-gt_latex_dependencies <- function() {
-
-  check_installed("knitr", "for getting the LaTeX dependency headers.")
-
-  knitr::asis_output(
-    paste(
-      "",
-      "% gt packages",
-      paste0("\\usepackage{", latex_packages(), "}", collapse = "\n"),
-      "",
-      sep = "\n"
-    )
-  )
-
-}
+# Fonts ------------------------------------------------------------------------
 
 #' Helper function for specifying a font from the *Google Fonts* service
 #'

@@ -21,6 +21,29 @@ selection_text <- function(html, selection) {
   rvest::html_text(rvest::html_nodes(html, selection))
 }
 
+expect_selection_text_from_gt <- function(gt_tbl, selection, expected, ...) {
+  html <- xml2::read_html(render_as_html(gt_tbl))
+  expect_equal(
+    selection_text(html, selection),
+    expected,
+    ...
+  )
+}
+
+expect_equal_gt <- function(gt_tbl1, gt_tbl2, f = render_as_html, ignore_id = FALSE, ...) {
+  gt_tbl1 <- f(gt_tbl1)
+  gt_tbl2 <- f(gt_tbl2)
+  if (ignore_id) {
+    gt_tbl1 <- gsub("id=\"[a-z]*?\"", "", gt_tbl1)
+    gt_tbl2 <- gsub("id=\"[a-z]*?\"", "", gt_tbl2)
+  }
+  expect_equal(
+    gt_tbl1,
+    gt_tbl2
+  )
+}
+
+
 # Helper function to compare a contiguous set of HTML fragments with raw html
 html_fragment_within <- function(raw_html, ...) {
   grepl(paste0("\\Q", c(...), "\\E", "[\\n\\s]*?", collapse = ""), raw_html, perl = TRUE)
@@ -94,6 +117,13 @@ get_row_group_text <- function(tbl_html) {
     "\n\\s+",
     "",
     selection_text(tbl_html, "[class='gt_group_heading_row']")
+  )
+}
+
+generate_html_units <- function(input) {
+  render_units(
+    define_units(input),
+    context = "html"
   )
 }
 

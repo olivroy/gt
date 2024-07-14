@@ -65,14 +65,11 @@ which targets numeric columns that have a maximum value greater than
 1,000,000 (excluding any \code{NA}s from consideration).
 
 By default all columns and rows are selected (with the \code{everything()}
-defaults). Cell values that are incompatible with a given formatting function
-will be skipped over, like \code{character} values and numeric \verb{fmt_*()}
-functions. So it's safe to select all columns with a particular formatting
-function (only those values that can be formatted will be formatted), but,
-you may not want that. One strategy is to format the bulk of cell values with
-one formatting function and then constrain the columns for later passes with
-other types of formatting (the last formatting done to a cell is what you get
-in the final output).
+defaults). Cell values that are incompatible with a given coloring
+function/method will be skipped over. One strategy is to color the bulk of
+cell values with one formatting function and then constrain the columns for
+later passes (the last coloring done to a cell is what you get in the final
+output).
 
 Once the columns are targeted, we may also target the \code{rows} within those
 columns. This can be done in a variety of ways. If a stub is present, then we

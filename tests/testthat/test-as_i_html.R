@@ -119,3 +119,4 @@ test_that("Interactive tables won't fail when using different options", {
   capture_output(expect_no_error(tbl_gt_i_27))
 
 })
+

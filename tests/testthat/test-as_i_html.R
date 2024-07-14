@@ -120,3 +120,221 @@ test_that("Interactive tables won't fail when using different options", {
 
 })
 
+# tab_spanner + opt_interactive() ----------------------------------------------
+
+# tab_spanner() interactive ----------------------------------------------------
+test_that("tab_spanner() is compatible with interactive tables (#1618)", {
+  skip_if_not_installed("jsonlite")
+  skip_if_not_installed("stringr")
+
+  # returns the json-object of the reactable javascript-part
+  reactive_table_to_json <- function(reactable_obj){
+    tmp_html_tag <- reactable_obj %>%
+      htmltools::as.tags()  %>%
+      htmltools::doRenderTags()
+
+    tmp_html_tag2 <- stringr::str_extract(
+      tmp_html_tag,
+      '<script type="application/json" data-for="[^>]+>(?<found>.+)</script>',
+      group = 1
+    )
+    jsonlite::parse_json(tmp_html_tag2)
+  }
+  #
+  # simple example with 1 spanner, 1 level
+  #
+
+  # reactable should have the expected spanners
+  interactive_tbl <-
+    exibble[, 1:4] %>%
+    gt() %>%
+    tab_spanner(label = "spanner_datechar", columns = c(date, char)) %>%
+    opt_interactive() %>%
+    reactive_table_to_json()
+
+  interactive_tbl_colgroups <- do.call(rbind, interactive_tbl$x$tag$attribs$columnGroups) %>%
+    dplyr::as_tibble() %>%
+    dplyr::mutate(across(c(-columns), ~ .x %>% sapply("[[", 1)))
+
+  expect_equal(nrow(interactive_tbl_colgroups), 1)
+  expect_equal(
+    interactive_tbl_colgroups$name %>% sort(),
+    c("spanner_datechar")
+  )
+
+  # expected spanners should contain the expected cols
+  expect_equal(
+    interactive_tbl_colgroups %>% dplyr::filter(name == "spanner_datechar") %>% .$columns %>% .[[1]] %>% sapply("[[", 1) %>% sort(),
+    c("char", "date")
+  )
+
+  #
+  # more complex example with multiple spanners, 1 level
+  #
+
+  interactive_tbl <-
+    exibble[, 1:4] %>%
+    gt() %>%
+    tab_spanner(label = "spanner_numchar", columns = c(num, char)) %>%
+    tab_spanner(label = "spanner_dat", columns = c(date)) %>%
+    opt_interactive() %>%
+    reactive_table_to_json()
+
+  interactive_tbl_colgroups <- do.call(rbind, interactive_tbl$x$tag$attribs$columnGroups) %>%
+    dplyr::as_tibble() %>%
+    dplyr::mutate(across(c(-columns), ~ .x %>% sapply("[[", 1)))
+
+  testthat::expect_equal(nrow(interactive_tbl_colgroups), 2)
+  testthat::expect_equal(
+    interactive_tbl_colgroups$name %>% sort(),
+    c("spanner_dat", "spanner_numchar")
+  )
+
+  # expected spanners should contain the expected cols
+  testthat::expect_equal(
+    interactive_tbl_colgroups %>% dplyr::filter(name == "spanner_numchar") %>% .$columns %>% .[[1]] %>% sapply("[[", 1) %>% sort(),
+    c("char", "num")
+  )
+
+  testthat::expect_equal(
+    interactive_tbl_colgroups %>% dplyr::filter(name == "spanner_dat") %>% .$columns %>% .[[1]] %>% sapply("[[", 1) %>% sort(),
+    c("date")
+  )
+
+  #
+  # MD, HTML should be rendered - raw text should be escaped
+  #
+
+  interactive_tbl <-
+    exibble[, 1:4] %>%
+    gt() %>%
+    tab_spanner(label = md("*md spanner*"), columns = c(num)) %>%
+    tab_spanner(label = html("<u>html spanner</u>"), columns = c(date)) %>%
+    tab_spanner(label = "normal spanner with <u>tags</u> and *more*", columns = c(char)) %>%
+    opt_interactive() %>%
+    reactive_table_to_json()
+
+  interactive_tbl_colgroups <- do.call(rbind, interactive_tbl$x$tag$attribs$columnGroups) %>%
+    dplyr::as_tibble() %>%
+    dplyr::mutate(across(c(-columns), ~ .x %>% sapply("[[", 1)))
+
+  testthat::expect_match(interactive_tbl_colgroups %>% dplyr::filter(name == "*md spanner*") %>% dplyr::select(header) %>% as.character(),
+                         regexp = "<span.+md spanner.+"
+  )
+
+  testthat::expect_match(interactive_tbl_colgroups %>% dplyr::filter(name == "<u>html spanner</u>") %>% dplyr::select(header) %>% as.character(),
+                         regexp = "<u>html spanner</u>"
+  )
+
+  testthat::expect_match(interactive_tbl_colgroups %>% dplyr::filter(name == "normal spanner with <u>tags</u> and *more*") %>% dplyr::select(header) %>% as.character(),
+                         regexp = "normal spanner with &lt;u&gt;.+"
+  )
+
+  #
+  # spanners with same name but different ID must not be a problem
+  #
+
+  interactive_tbl <-
+    exibble[, 1:4] %>%
+    gt() %>%
+    tab_spanner(label = "spanner_label", columns = c(num), id = 1) %>%
+    tab_spanner(label = "spanner_label", columns = c(date, fctr), id = 2) %>%
+    tab_spanner(label = "another_label", columns = c(char), id = 3) %>%
+    opt_interactive() %>%
+    reactive_table_to_json()
+
+  interactive_tbl_colgroups <- do.call(rbind, interactive_tbl$x$tag$attribs$columnGroups) %>%
+    dplyr::as_tibble() %>%
+    dplyr::mutate(across(c(-columns), ~ .x %>% sapply("[[", 1))) %>%
+    dplyr::rowwise() %>%
+    dplyr::mutate(size = length(columns)) %>%
+    dplyr::arrange(size)
+
+  expect_equal(
+    interactive_tbl_colgroups %>% dplyr::filter(name == "spanner_label") %>% .$columns %>% .[[1]] %>% sapply("[[", 1) %>% sort(),
+    "num"
+  )
+
+  expect_equal(
+    interactive_tbl_colgroups %>% dplyr::filter(name == "spanner_label") %>% .$columns %>% .[[2]] %>% sapply("[[", 1) %>% sort(),
+    c("date", "fctr")
+  )
+})
+
+# spanners with multiple levels result in a warning message
+cli::test_that_cli("multiple levels of `tab_spanner()` are not compatible with interactive tables", configs = c("plain"), {
+  skip_if_not_installed("jsonlite")
+  skip_if_not_installed("stringr")
+
+  # returns the json-object of the reactable javascript-part
+  reactive_table_to_json <- function(reactable_obj){
+    tmp_html_tag <- reactable_obj %>%
+      htmltools::as.tags()  %>%
+      htmltools::doRenderTags()
+
+    tmp_html_tag2 <- stringr::str_extract(
+      tmp_html_tag,
+      '<script type="application/json" data-for="[^>]+>(?<found>.+)</script>',
+      group = 1
+    )
+    jsonlite::parse_json(tmp_html_tag2)
+  }
+
+  expect_snapshot(local({
+    tmp <- exibble[, 1:4] %>%
+      gt() %>%
+      tab_spanner(label = "spanner_numdat", columns = c(num, date)) %>%
+      tab_spanner(label = "spanner_char", columns = c(char)) %>%
+      tab_spanner(label = "spanner_numdatchar", columns = c(num, date, char)) %>%
+      opt_interactive()
+  }))
+})
+
+
+test_that("tab_spanner() can't render multiple spanners in interactive tables and only use 1st level", {
+  skip_if_not_installed("jsonlite")
+  skip_if_not_installed("stringr")
+
+  # returns the json-object of the reactable javascript-part
+  reactive_table_to_json <- function(reactable_obj){
+    tmp_html_tag <- reactable_obj %>%
+      htmltools::as.tags()  %>%
+      htmltools::doRenderTags()
+    tmp_html_tag2 <- stringr::str_extract(
+      tmp_html_tag,
+      '<script type="application/json" data-for="[^>]+>(?<found>.+)</script>',
+      group = 1
+    )
+    jsonlite::parse_json(tmp_html_tag2)
+  }
+  suppressWarnings({
+    interactive_tbl <-
+      exibble[, 1:4] %>%
+      gt() %>%
+      tab_spanner(label = "spanner_numdat", columns = c(num, date)) %>%
+      tab_spanner(label = "spanner_char", columns = c(char)) %>%
+      tab_spanner(label = "spanner_numdatchar", columns = c(num, date, char)) %>%
+      opt_interactive() %>%
+      reactive_table_to_json()
+  })
+
+
+  interactive_tbl_colgroups <- do.call(rbind, interactive_tbl$x$tag$attribs$columnGroups) %>%
+    dplyr::as_tibble() %>%
+    dplyr::mutate(across(c(-columns), ~ .x %>% sapply("[[", 1))) %>%
+    dplyr::rowwise() %>%
+    dplyr::mutate(size = length(columns)) %>%
+    dplyr::arrange(size)
+
+  # expected spanners should contain the expected cols
+  testthat::expect_equal(
+    interactive_tbl_colgroups %>% dplyr::filter(name == "spanner_char") %>% .$columns %>% .[[1]] %>% sapply("[[", 1) %>% sort(),
+    c("char")
+  )
+
+  testthat::expect_equal(
+    interactive_tbl_colgroups %>% dplyr::filter(name == "spanner_numdat") %>% .$columns %>% .[[1]] %>% sapply("[[", 1) %>% sort(),
+    c("date", "num")
+  )
+})
+

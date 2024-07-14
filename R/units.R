@@ -22,6 +22,822 @@
 #------------------------------------------------------------------------------#
 
 
+# fmt_units() ------------------------------------------------------------------
+#' Format measurement units
+#'
+#' @description
+#'
+#' `fmt_units()` lets you better format measurement units in the table body.
+#' These must conform to **gt**'s specialized units notation (e.g.,
+#' `"J Hz^-1 mol^-1"` can be used to generate units for the
+#' *molar Planck constant*) for the best conversion. The notation here provides
+#' several conveniences for defining units, so as long as the values to be
+#' formatted conform to this syntax, you'll obtain nicely-formatted units no
+#' matter what the table output format might be (i.e., HTML, LaTeX, RTF, etc.).
+#' Details pertaining to the units notation can be found in the section entitled
+#' *How to use **gt**'s units notation*.
+#'
+#' @inheritParams fmt_number
+#'
+#' @return An object of class `gt_tbl`.
+#'
+#' @section How to use **gt**'s units notation:
+#'
+#' The units notation involves a shorthand of writing units that feels familiar
+#' and is fine-tuned for the task at hand. Each unit is treated as a separate
+#' entity (parentheses and other symbols included) and the addition of subscript
+#' text and exponents is flexible and relatively easy to formulate. This is all
+#' best shown with examples:
+#'
+#' - `"m/s"` and `"m / s"` both render as `"m/s"`
+#' - `"m s^-1"` will appear with the `"-1"` exponent intact
+#' - `"m /s"` gives the same result, as `"/<unit>"` is equivalent to
+#'   `"<unit>^-1"`
+#' - `"E_h"` will render an `"E"` with the `"h"` subscript
+#' - `"t_i^2.5"` provides a `t` with an `"i"` subscript and a `"2.5"` exponent
+#' - `"m[_0^2]"` will use overstriking to set both scripts vertically
+#' - `"g/L %C6H12O6%"` uses a chemical formula (enclosed in a pair of `"%"`
+#'   characters) as a unit partial, and the formula will render correctly with
+#'   subscripted numbers
+#' - Common units that are difficult to write using ASCII text may be implicitly
+#'   converted to the correct characters (e.g., the `"u"` in `"ug"`, `"um"`,
+#'   `"uL"`, and `"umol"` will be converted to the Greek *mu* symbol; `"degC"`
+#'   and `"degF"` will render a degree sign before the temperature unit)
+#' - We can transform shorthand symbol/unit names enclosed in `":"` (e.g.,
+#'   `":angstrom:"`, `":ohm:"`, etc.) into proper symbols
+#' - Greek letters can added by enclosing the letter name in `":"`; you can
+#'   use lowercase letters (e.g., `":beta:"`, `":sigma:"`, etc.) and uppercase
+#'   letters too (e.g., `":Alpha:"`, `":Zeta:"`, etc.)
+#' - The components of a unit (unit name, subscript, and exponent) can be
+#'   fully or partially italicized/emboldened by surrounding text with `"*"` or
+#'   `"**"`
+#'
+#' @section Examples:
+#'
+#' Let's use the [`illness`] dataset and create a new **gt** table. The `units`
+#' column contains character values in **gt**'s specialized units notation
+#' (e.g., `"x10^9 / L"`) so the `fmt_units()` function was used to better format
+#' those units.
+#'
+#' ```r
+#' illness |>
+#'   gt() |>
+#'   fmt_units(columns = units) |>
+#'   sub_missing(columns = -starts_with("norm")) |>
+#'   sub_missing(columns = c(starts_with("norm"), units), missing_text = "") |>
+#'   sub_large_vals(rows = test == "MYO", threshold = 1200) |>
+#'   fmt_number(
+#'     decimals = 2,
+#'     drop_trailing_zeros = TRUE
+#'   ) |>
+#'   tab_header(title = "Laboratory Findings for the YF Patient") |>
+#'   tab_spanner(label = "Day", columns = starts_with("day")) |>
+#'   cols_label_with(fn = ~ gsub("day_", "", .)) |>
+#'   cols_merge_range(col_begin = norm_l, col_end = norm_u) |>
+#'   cols_label(
+#'     starts_with("norm") ~ "Normal Range",
+#'     test ~ "Test",
+#'     units ~ "Units"
+#'   ) |>
+#'   cols_width(
+#'     starts_with("day") ~ px(80),
+#'     everything() ~ px(120)
+#'   ) |>
+#'   tab_style(
+#'     style = cell_text(align = "center"),
+#'     locations = cells_column_labels(columns = starts_with("day"))
+#'   ) |>
+#'   tab_style(
+#'     style = cell_fill(color = "aliceblue"),
+#'     locations = cells_body(columns = c(test, units))
+#'   ) |>
+#'   opt_vertical_padding(scale = 0.4) |>
+#'   opt_align_table_header(align = "left") |>
+#'   tab_options(heading.padding = px(10))
+#' ```
+#'
+#' \if{html}{\out{
+#' `r man_get_image_tag(file = "man_fmt_units_1.png")`
+#' }}
+#'
+#' The [`constants`] dataset contains values for hundreds of fundamental
+#' physical constants. We'll take a subset of values that have some molar basis
+#' and generate a **gt** table from that. Like the [`illness`] dataset, this one
+#' has a `units` column so, again, the `fmt_units()` function will be used to
+#' format those units. Here, the preference for typesetting measurement units is
+#' to have positive and negative exponents (e.g., not `"<unit_1> / <unit_2>"`
+#' but rather `"<unit_1> <unit_2>^-1"`).
+#'
+#' ```r
+#' constants |>
+#'   dplyr::filter(grepl("molar", name)) |>
+#'   gt() |>
+#'   cols_hide(columns = c(uncert, starts_with("sf"))) |>
+#'   fmt_units(columns = units) |>
+#'   fmt_scientific(columns = value, decimals = 3) |>
+#'   tab_header(title = "Physical Constants Having a Molar Basis") |>
+#'   tab_options(column_labels.hidden = TRUE)
+#' ```
+#'
+#' \if{html}{\out{
+#' `r man_get_image_tag(file = "man_fmt_units_2.png")`
+#' }}
+#'
+#' @family data formatting functions
+#' @section Function ID:
+#' 3-19
+#'
+#' @section Function Introduced:
+#' `v0.10.0` (October 7, 2023)
+#'
+#' @export
+fmt_units <- function(
+    data,
+    columns = everything(),
+    rows = everything()
+) {
+
+  # Perform input object validation
+  stop_if_not_gt_tbl(data = data)
+
+  valid_class <- c("character", "factor")
+  check_columns_valid_if_strict(data, {{ columns }}, valid_class)
+
+  # Pass `data`, `columns`, `rows`, and the formatting
+  # functions as a function list to `fmt()`
+  fmt(
+    data = data,
+    columns = {{ columns }},
+    rows = {{ rows }},
+    fns = list(
+      html = function(x) {
+        format_units_by_context(x, context = "html")
+      },
+      latex = function(x) {
+        format_units_by_context(x, context = "latex")
+      },
+      rtf = function(x) {
+        format_units_by_context(x, context = "rtf")
+      },
+      word = function(x) {
+        format_units_by_context(x, context = "word")
+      },
+      default = function(x) {
+        format_units_by_context(x, context = "plain")
+      }
+    )
+  )
+}
+
+# cols_units() -----------------------------------------------------------------
+#' Define units for one or more columns
+#'
+#' @description
+#'
+#' Column labels can sometimes contain measurement units, and these might range
+#' from easy to define and typeset (e.g., `"m/s"`) to very difficult. Such
+#' difficulty can arise from the need to include subscripts or superscripts,
+#' non-ASCII symbols, etc. The `cols_units()` function tries to make this task
+#' easier by letting you apply text pertaining to units to various columns. This
+#' takes advantage of **gt**'s specialized units notation (e.g.,
+#' `"J Hz^-1 mol^-1"` can be used to generate units for the
+#' *molar Planck constant*). The notation here provides several conveniences for
+#' defining units, letting you produce the correct formatting no matter what the
+#' table output format might be (i.e., HTML, LaTeX, RTF, etc.). Details
+#' pertaining to the units notation can be found in the section entitled
+#' *How to use **gt**'s units notation* in [fmt_units()].
+#'
+#' @inheritParams fmt_number
+#'
+#' @param ... *Column units definitions*
+#'
+#'   `<multiple expressions>` // **required** (or, use `.list`)
+#'
+#'   Expressions for the assignment of column units for the table columns in
+#'   `.data`. Two-sided formulas (e.g., `<LHS> ~ <RHS>`) can be used, where the
+#'   left-hand side corresponds to selections of columns and the right-hand side
+#'   evaluates to single-length values for the units to apply. Column names
+#'   should be enclosed in `c()`. Select helpers like [starts_with()],
+#'   [ends_with()], [contains()], [matches()], and [everything()] can be used in
+#'   the LHS. Named arguments are also valid as input for simple mappings of
+#'   column name to the **gt** units syntax; they should be of the form
+#'   `<column name> = <units text>`. Subsequent expressions that operate on the
+#'   columns assigned previously will result in overwriting column units
+#'   defintion values.
+#'
+#' @param .list *Alternative to `...`*
+#'
+#'   `<list of multiple expressions>` // **required** (or, use `...`)
+#'
+#'   Allows for the use of a list as an input alternative to `...`.
+#'
+#' @param .units_pattern *Pattern to combine column labels and units*
+#'
+#'   `scalar<character>` // *default:* `NULL` (`optional`)
+#'
+#'   An optional pattern to be used for combining column labels with the defined
+#'   units. The default pattern is `"{1}, {2}"`, where `"{1}"` refers to the
+#'   column label text and `"{2}"` is the text related to the associated units.
+#'   This default can be modified through the `column_labels.units_pattern`
+#'   option found in [tab_options()]. Setting a value here will provide an
+#'   override to the `column_labels.units_pattern` default (only for the
+#'   resolved columns in the invocation of `cols_units()`).
+#'
+#' @return An object of class `gt_tbl`.
+#'
+#' @section How to use **gt**'s units notation:
+#'
+#' The units notation involves a shorthand of writing units that feels familiar
+#' and is fine-tuned for the task at hand. Each unit is treated as a separate
+#' entity (parentheses and other symbols included) and the addition of subscript
+#' text and exponents is flexible and relatively easy to formulate. This is all
+#' best shown with examples:
+#'
+#' - `"m/s"` and `"m / s"` both render as `"m/s"`
+#' - `"m s^-1"` will appear with the `"-1"` exponent intact
+#' - `"m /s"` gives the same result, as `"/<unit>"` is equivalent to
+#'   `"<unit>^-1"`
+#' - `"E_h"` will render an `"E"` with the `"h"` subscript
+#' - `"t_i^2.5"` provides a `t` with an `"i"` subscript and a `"2.5"` exponent
+#' - `"m[_0^2]"` will use overstriking to set both scripts vertically
+#' - `"g/L %C6H12O6%"` uses a chemical formula (enclosed in a pair of `"%"`
+#'   characters) as a unit partial, and the formula will render correctly with
+#'   subscripted numbers
+#' - Common units that are difficult to write using ASCII text may be implicitly
+#'   converted to the correct characters (e.g., the `"u"` in `"ug"`, `"um"`,
+#'   `"uL"`, and `"umol"` will be converted to the Greek *mu* symbol; `"degC"`
+#'   and `"degF"` will render a degree sign before the temperature unit)
+#' - We can transform shorthand symbol/unit names enclosed in `":"` (e.g.,
+#'   `":angstrom:"`, `":ohm:"`, etc.) into proper symbols
+#' - Greek letters can added by enclosing the letter name in `":"`; you can
+#'   use lowercase letters (e.g., `":beta:"`, `":sigma:"`, etc.) and uppercase
+#'   letters too (e.g., `":Alpha:"`, `":Zeta:"`, etc.)
+#' - The components of a unit (unit name, subscript, and exponent) can be
+#'   fully or partially italicized/emboldened by surrounding text with `"*"` or
+#'   `"**"`
+#'
+#' @section Examples:
+#'
+#' Let's analyze some [`pizzaplace`] data with **dplyr** and then make a **gt**
+#' table. Here we are separately defining new column labels with [cols_label()]
+#' and then defining the units (to combine to those labels) through
+#' `cols_units()`. The default pattern for combination is `"{1}, {2}"` which
+#' is acceptable here.
+#'
+#' ```r
+#' pizzaplace |>
+#'   dplyr::mutate(month = lubridate::month(date, label = TRUE, abbr = TRUE)) |>
+#'   dplyr::group_by(month) |>
+#'   dplyr::summarize(
+#'     n_sold = dplyr::n(),
+#'     rev = sum(price)
+#'   ) |>
+#'   dplyr::mutate(chg = (rev - dplyr::lag(rev)) / dplyr::lag(rev)) |>
+#'   dplyr::mutate(month = as.character(month)) |>
+#'   gt(rowname_col = "month") |>
+#'   fmt_integer(columns = n_sold) |>
+#'   fmt_currency(columns = rev, use_subunits = FALSE) |>
+#'   fmt_percent(columns = chg) |>
+#'   sub_missing() |>
+#'   cols_label(
+#'     n_sold = "Number of Pizzas Sold",
+#'     rev = "Revenue Generated",
+#'     chg = "Monthly Changes in Revenue"
+#'   ) |>
+#'   cols_units(
+#'     n_sold = "units month^-1",
+#'     rev = "USD month^-1",
+#'     chg = "% change *m*/*m*"
+#'   ) |>
+#'   cols_width(
+#'     stub() ~ px(40),
+#'     everything() ~ px(200)
+#'   )
+#' ```
+#'
+#' \if{html}{\out{
+#' `r man_get_image_tag(file = "man_cols_units_1.png")`
+#' }}
+#'
+#' The [`sza`] dataset has a wealth of information and here we'll generate
+#' a smaller table that contains the average solar zenith angles at noon for
+#' different months and at different northern latitudes. The column labels are
+#' numbers representing the latitudes and it's convenient to apply units
+#' of 'degrees north' to each of them with `cols_units()`. The extra thing we
+#' wanted to do here was to ensure that the units are placed directly after
+#' the column labels, and we do that with `.units_pattern = "{1}{2}"`. This
+#' append the units (`"{2}"`) right to the column label (`"{1}"`).
+#'
+#' ```r
+#' sza |>
+#'   dplyr::filter(tst == "1200") |>
+#'   dplyr::select(-tst) |>
+#'   dplyr::arrange(desc(latitude)) |>
+#'   tidyr::pivot_wider(
+#'     names_from = latitude,
+#'     values_from = sza
+#'   ) |>
+#'   gt(rowname_col = "month") |>
+#'   cols_units(
+#'     everything() ~ ":degree:N",
+#'     .units_pattern = "{1}{2}"
+#'   ) |>
+#'   tab_spanner(
+#'     label = "Solar Zenith Angle",
+#'     columns = everything()
+#'   ) |>
+#'   text_transform(
+#'     fn = toupper,
+#'     locations = cells_stub()
+#'   ) |>
+#'   tab_style(
+#'     style = cell_text(align = "right"),
+#'     locations = cells_stub()
+#'   )
+#' ```
+#'
+#' \if{html}{\out{
+#' `r man_get_image_tag(file = "man_cols_units_2.png")`
+#' }}
+#'
+#' Taking a portion of the [`towny`] dataset, let's use spanners to describe
+#' what's in the columns and use only measurement units for the column labels.
+#' The columns labels that have to do with population and density information
+#' will be replaced with units defined in `cols_units()`. We'll use a
+#' `.units_pattern` value of `"{2}"`, which means that only the units will
+#' be present (the `"{1}"`, representing the column label text, is omitted).
+#' Spanners added through several invocations of [tab_spanner()] will declare
+#' what the last four columns contain.
+#'
+#' ```r
+#' towny |>
+#'   dplyr::select(
+#'     name, land_area_km2,
+#'     ends_with("2016"), ends_with("2021")
+#'   ) |>
+#'   dplyr::slice_max(population_2021, n = 10) |>
+#'   gt(rowname_col = "name") |>
+#'   tab_stubhead(label = "City") |>
+#'   fmt_integer() |>
+#'   cols_label(
+#'     land_area_km2 ~ "Area, {{km^2}}",
+#'     starts_with("population") ~ "",
+#'     starts_with("density") ~ ""
+#'   ) |>
+#'   cols_units(
+#'     starts_with("population") ~ "*ppl*",
+#'     starts_with("density") ~ "*ppl* km^-2",
+#'     .units_pattern = "{2}"
+#'   ) |>
+#'   tab_spanner(
+#'     label = "Population",
+#'     columns = starts_with("population"),
+#'     gather = FALSE
+#'   ) |>
+#'   tab_spanner(
+#'     label = "Density",
+#'     columns = starts_with("density"),
+#'     gather = FALSE
+#'   ) |>
+#'   tab_spanner(
+#'     label = "2016",
+#'     columns = ends_with("2016"),
+#'     gather = FALSE
+#'   ) |>
+#'   tab_spanner(
+#'     label = "2021",
+#'     columns = ends_with("2021"),
+#'     gather = FALSE
+#'   ) |>
+#'   tab_style(
+#'     style = cell_text(align = "center"),
+#'     locations = cells_column_labels(
+#'       c(starts_with("population"), starts_with("density"))
+#'     )
+#'   ) |>
+#'   cols_width(everything() ~ px(120)) |>
+#'   opt_horizontal_padding(scale = 3)
+#' ```
+#'
+#' \if{html}{\out{
+#' `r man_get_image_tag(file = "man_cols_units_3.png")`
+#' }}
+#'
+#' @family column modification functions
+#' @section Function ID:
+#' 5-6
+#'
+#' @section Function Introduced:
+#' `v0.10.0` (October 7, 2023)
+#'
+#' @export
+cols_units <- function(
+    .data,
+    ...,
+    .list = list2(...),
+    .units_pattern = NULL
+) {
+
+  # Perform input object validation
+  stop_if_not_gt_tbl(data = .data)
+
+  # Collect a list of column units
+  units_list <- .list
+
+  column_vars <- dt_boxhead_get_vars(data = .data)
+
+  # If nothing is provided, return `data` unchanged
+  if (length(units_list) == 0) {
+    return(.data)
+  }
+
+  for (i in seq_along(units_list)) {
+
+    units_i <- units_list[i]
+
+    # When input is provided as a list in `.list`, we obtain named vectors;
+    # upgrade this to a list to match the input collected from `...`
+    if (rlang::is_named(units_i) && rlang::is_scalar_vector(units_i)) {
+      units_i <- as.list(units_i)
+    }
+
+    if (
+      is.list(units_i) &&
+      rlang::is_named(units_i) &&
+      rlang::is_scalar_vector(units_i[[1]])
+    ) {
+
+      # Get column and value
+      columns <- names(units_i)
+      new_units <- units_i[[1]]
+
+      if (!(columns %in% column_vars)) {
+        cli::cli_abort(c(
+          "Can't find column{?s} {.var {columns}} in the data.",
+          "i" = "The LHS should include column names or a tidyselect statement."
+        ))
+      }
+
+    } else if (
+      is.list(units_i) &&
+      rlang::is_formula(units_i[[1]])
+    ) {
+
+      units_i <- units_i[[1]]
+
+      cols <- rlang::f_lhs(units_i)
+
+      if (is.null(cols)) {
+        cli::cli_abort(c(
+          "A formula supplied to `cols_units()` must be two-sided.",
+          "i" = "The LHS should include column names or a tidyselect statement."
+        ))
+      }
+
+      # The default use of `resolve_cols_c()` won't work here if there
+      # is a table stub column (because we need to be able to set the
+      # stub column width and, by default, `resolve_cols_c()` excludes
+      # the stub); to prevent this exclusion, we set `excl_stub` to FALSE
+      columns <-
+        resolve_cols_c(
+          expr = !!cols,
+          data = .data
+        )
+
+      new_units <- rlang::eval_tidy(rlang::f_rhs(units_i))
+    }
+
+    # basic check on units value.
+    withCallingHandlers(
+      check_string(new_units, call = NULL, arg = "unit"),
+      error = function(e) {
+        cli::cli_abort(
+          "Incorrect unit for column{?s} {.var {columns}}.",
+          parent = e
+        )
+      })
+
+    for (j in seq_along(columns)) {
+
+      # For each of the resolved columns, add the units text to the boxhead
+      .data <-
+        dt_boxhead_edit_column_units(
+          data = .data,
+          var = columns[j],
+          column_units = new_units
+        )
+
+      if (!is.null(.units_pattern) && !is.na(.units_pattern)) {
+
+        .data <-
+          dt_boxhead_edit_column_pattern(
+            data = .data,
+            var = columns[j],
+            column_pattern = .units_pattern
+          )
+      }
+    }
+  }
+
+  .data
+}
+
+#' Get a conversion factor across two measurement units of a given class
+#'
+#' @description
+#'
+#' The `unit_conversion()` helper function gives us a conversion factor for
+#' transforming a value from one form of measurement units to a target form.
+#' For example if you have a length value that is expressed in miles you could
+#' transform that value to one in kilometers through multiplication of the value
+#' by the conversion factor (in this case `1.60934`).
+#'
+#' For `unit_conversion()` to understand the source and destination units, you
+#' need to provide a keyword value for the `from` and `to` arguments. To aid as
+#' a reference for this, call [info_unit_conversions()] to display an
+#' information table that contains all of the keywords for every conversion
+#' type.
+#'
+#' @param from *Units for the input value*
+#'
+#'   `scalar<character>` // **required**
+#'
+#'   The keyword representing the units for the value that requires unit
+#'   conversion. In the case where the value has units of miles, the necessary
+#'   input is `"length.mile"`.
+#'
+#' @param to *Desired units for the value*
+#'
+#'   `scalar<character>` // **required**
+#'
+#'   The keyword representing the target units for the value with units defined
+#'   in `from`. In the case where input value has units of miles and we would
+#'   rather want the value to be expressed as kilometers, the `to` value should
+#'   be `"length.kilometer"`.
+#'
+#' @return A single numerical value.
+#'
+#' @section Examples:
+#'
+#' Let's use a portion of the [`towny`] dataset and create a table showing
+#' population, density, and land area for 10 municipalities. The `land_area_km2`
+#' values are in units of square kilometers, however, we'd rather the values
+#' were in square miles. We can convert the numeric values while formatting the
+#' values with [`fmt_number()`] by using `unit_conversion()` in the `scale_by`
+#' argument since the return value of that is a conversion factor (which is
+#' applied to each value by multiplication). The same is done for converting the
+#' 'people per square kilometer' values in `density_2021` to 'people per square
+#' mile', however, the units to convert are in the denominator so the inverse
+#' of the conversion factor must be used.
+#'
+#' ```r
+#' towny |>
+#'   dplyr::arrange(desc(density_2021)) |>
+#'   dplyr::slice_head(n = 10) |>
+#'   dplyr::select(name, population_2021, density_2021, land_area_km2) |>
+#'   gt(rowname_col = "name") |>
+#'   fmt_integer(columns = population_2021) |>
+#'   fmt_number(
+#'     columns = land_area_km2,
+#'     decimals = 1,
+#'     scale_by = unit_conversion(
+#'       from = "area.square-kilometer",
+#'       to = "area.square-mile"
+#'     )
+#'   ) |>
+#'   fmt_number(
+#'     columns = density_2021,
+#'     decimals = 1,
+#'     scale_by = 1 / unit_conversion(
+#'       from = "area.square-kilometer",
+#'       to = "area.square-mile"
+#'     )
+#'   ) |>
+#'   cols_label(
+#'     land_area_km2 = "Land Area,<br>sq. mi",
+#'     population_2021 = "Population",
+#'     density_2021 = "Density,<br>ppl / sq. mi",
+#'     .fn = md
+#'   )
+#' ```
+#'
+#' \if{html}{\out{
+#' `r man_get_image_tag(file = "man_unit_conversion_1.png")`
+#' }}
+#'
+#' With a small slice of the [`gibraltar`] dataset, let's display the
+#' temperature values in terms of degrees Celsius (present in the data) *and* as
+#' temperatures in degrees Fahrenheit (achievable via conversion). We can
+#' duplicate the `temp` column through [cols_add()] (naming the new column as
+#' `temp_f`) and when formatting through [fmt_integer()] we can call
+#' `unit_conversion()` within the `scale_by` argument to perform this
+#' transformation while formatting the values as integers.
+#'
+#' ```r
+#' gibraltar |>
+#'   dplyr::filter(
+#'     date == "2023-05-15",
+#'     time >= "06:00",
+#'     time <= "12:00"
+#'   ) |>
+#'   dplyr::select(time, temp) |>
+#'   gt() |>
+#'   tab_header(
+#'     title = "Air Temperature During Late Morning Hours at LXGB Stn.",
+#'     subtitle = "May 15, 2023"
+#'   ) |>
+#'   cols_add(temp_f = temp) |>
+#'   cols_move(columns = temp_f, after = temp) |>
+#'   tab_spanner(
+#'     label = "Temperature",
+#'     columns = starts_with("temp")
+#'   ) |>
+#'   fmt_number(
+#'     columns = temp,
+#'     decimals = 1
+#'   ) |>
+#'   fmt_integer(
+#'     columns = temp_f,
+#'     scale_by = unit_conversion(
+#'       from = "temperature.C",
+#'       to = "temperature.F"
+#'     )
+#'   ) |>
+#'   cols_label(
+#'     time = "Time",
+#'     temp = "{{degC}}",
+#'     temp_f = "{{degF}}"
+#'   ) |>
+#'   cols_width(
+#'     starts_with("temp") ~ px(80),
+#'     time ~ px(100)
+#'   ) |>
+#'   opt_horizontal_padding(scale = 3) |>
+#'   opt_vertical_padding(scale = 0.5) |>
+#'   opt_align_table_header(align = "left") |>
+#'   tab_options(heading.title.font.size = px(16))
+#' ```
+#'
+#' \if{html}{\out{
+#' `r man_get_image_tag(file = "man_unit_conversion_2.png")`
+#' }}
+#'
+#' @family helper functions
+#' @section Function ID:
+#' 8-7
+#'
+#' @section Function Introduced:
+#' `v0.11.0`
+#'
+#' @export
+unit_conversion <- function(from, to) {
+
+  force(from)
+  force(to)
+
+  if (from %in% temperature_keywords() && to %in% temperature_keywords()) {
+
+    from <- normalize_temp_keyword(from)
+    to <- normalize_temp_keyword(to)
+
+    return(temperature_conversions(from = from, to = to))
+  }
+
+  if (!(from %in% conversion_factors[["from"]])) {
+    cli::cli_abort("The unit supplied in {.arg from} is not known.")
+  }
+  if (!(to %in% conversion_factors[["to"]])) {
+    cli::cli_abort("The unit supplied in {.arg to} is not known.")
+  }
+
+  if (from == to) {
+    return(1.0)
+  }
+
+  row_conversion <-
+    dplyr::filter(conversion_factors, from == {{ from }}, to == {{ to }})
+
+  # In the case where units are valid and available in the internal dataset,
+  # they may be across categories; such pairings do not allow for a conversion
+  # to take place
+  if (nrow(row_conversion) < 1) {
+    cli::cli_abort("The conversion specified cannot be performed.")
+  }
+
+  row_conversion[["conv_factor"]]
+}
+
+# Units helpers ----------------------------------------------------------------
+
+temperature_keywords <- function() {
+  c(
+    "temperature.celsius",
+    "temp.celsius",
+    "celsius",
+    "temperature.C",
+    "temp.C",
+    "C",
+    "temperature.fahrenheit",
+    "temp.fahrenheit",
+    "fahrenheit",
+    "temperature.F",
+    "temp.F",
+    "F",
+    "temperature.kelvin",
+    "temp.kelvin",
+    "kelvin",
+    "temperature.K",
+    "temp.K",
+    "K",
+    "temperature.rankine",
+    "temp.rankine",
+    "rankine",
+    "temperature.R",
+    "temp.R",
+    "R"
+  )
+}
+
+normalize_temp_keyword <- function(keyword) {
+
+  switch(
+    keyword,
+    temperature.celsius =,
+    temp.celsius =,
+    celsius =,
+    temperature.C =,
+    temp.C =,
+    C = "C",
+    temperature.fahrenheit =,
+    temp.fahrenheit =,
+    fahrenheit =,
+    temperature.F =,
+    temp.F =,
+    `F` = "F",
+    temperature.kelvin =,
+    temp.kelvin =,
+    kelvin =,
+    temperature.K =,
+    temp.K =,
+    K = "K",
+    temperature.rankine =,
+    temp.rankine =,
+    rankine =,
+    temperature.R =,
+    temp.R =,
+    R = "R"
+  )
+}
+
+temperature_conversions <- function(from, to) {
+
+  from_to <- paste0(from, to)
+
+  switch(
+    from_to,
+    "CF" = function(x) (1.8 * x) + 32,
+    "CK" = function(x) x + 273.15,
+    "CR" = function(x) (1.8 * x) + 491.67,
+    "FC" = function(x) (x - 32) * 5/9,
+    "FK" = function(x) (x + 459.67) / 1.8,
+    "FR" = function(x) x + 459.67,
+    "KC" = function(x) x - 273.15,
+    "KF" = function(x) ((x - 273.15) * 1.8) + 32,
+    "KR" = function(x) x * 1.8,
+    "RC" = function(x) (x - 32 - 459.67) / 1.8,
+    "RF" = function(x) x - 459.67,
+    "RK" = function(x) x / 1.8,
+    "CC" = ,
+    "FF" = ,
+    "KK" = ,
+    "RR" = 1
+  )
+}
+
+#------------------------------------------------------------------------------#
+#
+#                /$$
+#               | $$
+#     /$$$$$$  /$$$$$$
+#    /$$__  $$|_  $$_/
+#   | $$  \ $$  | $$
+#   | $$  | $$  | $$ /$$
+#   |  $$$$$$$  |  $$$$/
+#    \____  $$   \___/
+#    /$$  \ $$
+#   |  $$$$$$/
+#    \______/
+#
+#  This file is part of the 'rstudio/gt' project.
+#
+#  Copyright (c) 2018-2024 gt authors
+#
+#  For full copyright and license information, please look at
+#  https://gt.rstudio.com/LICENSE.html
+#
+#------------------------------------------------------------------------------#
+
+
 # Create a `units_definition` object
 define_units <- function(units_notation, is_chemical_formula = FALSE) {
 

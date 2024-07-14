@@ -1,3 +1,28 @@
+#------------------------------------------------------------------------------#
+#
+#                /$$
+#               | $$
+#     /$$$$$$  /$$$$$$
+#    /$$__  $$|_  $$_/
+#   | $$  \ $$  | $$
+#   | $$  | $$  | $$ /$$
+#   |  $$$$$$$  |  $$$$/
+#    \____  $$   \___/
+#    /$$  \ $$
+#   |  $$$$$$/
+#    \______/
+#
+#  This file is part of the 'rstudio/gt' project.
+#
+#  Copyright (c) 2018-2024 gt authors
+#
+#  For full copyright and license information, please look at
+#  https://gt.rstudio.com/LICENSE.html
+#
+#------------------------------------------------------------------------------#
+
+
+# cols_merge() -----------------------------------------------------------------
 #' Merge data from two or more columns to a single column
 #'
 #' @description
@@ -252,7 +277,7 @@ cols_merge <- function(
     )
   )
 }
-
+# cols_merge_uncert() ----------------------------------------------------------
 #' Merge columns to a value-with-uncertainty column
 #'
 #' @description
@@ -265,7 +290,7 @@ cols_merge <- function(
 #' uncertainties, and any columns specified in `col_uncert` are hidden from
 #' appearing the output table.
 #'
-#' @inheritParams cols_align
+#' @inheritParams cols_merge
 #'
 #' @param col_val *Column to target for base values*
 #'
@@ -288,19 +313,6 @@ cols_merge <- function(
 #'   such as [starts_with()] and [ends_with()] can be used for column targeting,
 #'   it's recommended that one or two column names be explicitly provided in a
 #'   vector.
-#'
-#' @param rows *Rows to target*
-#'
-#'   `<row-targeting expression>` // *default:* `everything()`
-#'
-#'   In conjunction with `columns`, we can specify which of their rows should
-#'   participate in the merging process. The default [everything()] results in
-#'   all rows in `columns` being formatted. Alternatively, we can supply a
-#'   vector of row IDs within `c()`, a vector of row indices, or a select
-#'   helper function (e.g. [starts_with()], [ends_with()], [contains()],
-#'   [matches()],  [num_range()], and [everything()]). We can also use
-#'   expressions to filter down to the rows we need
-#'   (e.g., `[colname_1] > 100 & [colname_2] < 50`).
 #'
 #' @param sep *Separator text for uncertainties*
 #'
@@ -441,6 +453,7 @@ cols_merge_uncert <- function(
   data
 }
 
+# cols_merge_range() -----------------------------------------------------------
 #' Merge two columns to a value range column
 #'
 #' @description
@@ -451,7 +464,7 @@ cols_merge_uncert <- function(
 #' containing both values separated by an em dash. The column specified in
 #' `col_end` is dropped from the output table.
 #'
-#' @inheritParams cols_align
+#' @inheritParams cols_merge
 #'
 #' @param col_begin *Column to target for beginning of range*
 #'
@@ -508,9 +521,9 @@ cols_merge_uncert <- function(
 #'
 #'   `scalar<character>` // *default:* `NULL` (`optional`)
 #'
-#'   An optional locale identifier that can be used for applying a `sep` pattern
-#'   specific to a locale's rules. Examples include `"en"` for English (United
-#'   States) and `"fr"` for French (France). We can call [info_locales()] as a
+#'   An optional locale identifier that can be used for formatting values
+#'   according the locale's rules. Examples include `"en"` for English (United
+#'   States) and `"fr"` for French (France). We can call [info_locales()] for a
 #'   useful reference for all of the locales that are supported. A locale ID can
 #'   be also set in the initial [gt()] function call (where it would be used
 #'   automatically by any function with a `locale` argument) but a `locale`
@@ -652,36 +665,7 @@ cols_merge_range <- function(
   data
 }
 
-cols_merge_resolver <- function(
-    data,
-    col_begin,
-    col_end
-) {
-
-  # Get the columns supplied in `col_begin` as a character vector
-  col_begin <-
-    resolve_cols_c(
-      expr = {{ col_begin }},
-      data = data,
-      excl_stub = FALSE
-    )
-
-  # Get the columns supplied in `col_end` as a character vector
-  col_end <-
-    resolve_cols_c(
-      expr = {{ col_end }},
-      data = data,
-      excl_stub = FALSE
-    )
-
-  columns <- c(col_begin, col_end)
-
-  list(
-    columns = columns,
-    pattern = "{1}{sep}{2}"
-  )
-}
-
+# cols_merge_n_pct() -----------------------------------------------------------
 #' Merge two columns to combine counts and percentages
 #'
 #' @description
@@ -693,7 +677,7 @@ cols_merge_resolver <- function(
 #' percentages (e.g., `12 (23.2%)`). The column specified in `col_pct` is
 #' dropped from the output table.
 #'
-#' @inheritParams cols_align
+#' @inheritParams cols_merge
 #'
 #' @param col_n *Column to target for counts*
 #'
@@ -714,19 +698,6 @@ cols_merge_resolver <- function(
 #'   is to ensure that exactly one column is provided here. This column should
 #'   be formatted such that percentages are displayed (e.g., with
 #'   `fmt_percent()`).
-#'
-#' @param rows *Rows to target*
-#'
-#'   `<row-targeting expression>` // *default:* `everything()`
-#'
-#'   In conjunction with `columns`, we can specify which of their rows should
-#'   participate in the merging process. The default [everything()] results in
-#'   all rows in `columns` being formatted. Alternatively, we can supply a
-#'   vector of row IDs within `c()`, a vector of row indices, or a select
-#'   helper function (e.g. [starts_with()], [ends_with()], [contains()],
-#'   [matches()], [num_range()], and [everything()]). We can also use
-#'   expressions to filter down to the rows we need
-#'   (e.g., `[colname_1] > 100 & [colname_2] < 50`).
 #'
 #' @param autohide *Automatic hiding of the `col_pct` column*
 #'
@@ -868,6 +839,7 @@ cols_merge_n_pct <- function(
         data = data
       )
 
+    # Use all_of() to avoid tidyselect 1.1 deprecation warning.
     data <-
       cols_hide(
         data = data,
@@ -876,4 +848,36 @@ cols_merge_n_pct <- function(
   }
 
   data
+}
+
+# Helpers ----------------------------------------------------------------------
+
+cols_merge_resolver <- function(
+    data,
+    col_begin,
+    col_end
+) {
+
+  # Get the columns supplied in `col_begin` as a character vector
+  col_begin <-
+    resolve_cols_c(
+      expr = {{ col_begin }},
+      data = data,
+      excl_stub = FALSE
+    )
+
+  # Get the columns supplied in `col_end` as a character vector
+  col_end <-
+    resolve_cols_c(
+      expr = {{ col_end }},
+      data = data,
+      excl_stub = FALSE
+    )
+
+  columns <- c(col_begin, col_end)
+
+  list(
+    columns = columns,
+    pattern = "{1}{sep}{2}"
+  )
 }

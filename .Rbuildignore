@@ -38,7 +38,6 @@ tests/testthat/_snaps/cols_width.md
 tests/testthat/test-data_color.R
 tests/testthat/_snaps/data_color.md
 
-tests/testthat/test-empty_tbl.R
 tests/testthat/test-escaping.R
 tests/testthat/test-extract_body.R
 tests/testthat/test-extract_cells.R

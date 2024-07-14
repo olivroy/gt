@@ -177,6 +177,3 @@ tests/testthat/test-utils_plots.R
 tests/testthat/test-utils_render_html.R
 tests/testthat/test-utils_units.R
 tests/testthat/test-utils.R
-
-tests/testthat/test-vec_fmt.R
-tests/testthat/_snaps/vec_fmt.md

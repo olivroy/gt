@@ -657,7 +657,7 @@ adjust_luminance <- function(
   grDevices::hcl(h, c, l, alpha = alpha)
 }
 
-
+# Select helpers ---------------------------------------------------------------
 #' Select helper for targeting the stub column
 #'
 #' @description

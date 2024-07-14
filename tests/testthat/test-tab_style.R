@@ -5,42 +5,42 @@ check_suggests <- function() {
 
 # Create a table from `mtcars` that has all the different components
 data <-
-  gt(mtcars, rownames_to_stub = TRUE) |>
-  cols_move_to_start(columns = c("gear", "carb")) |>
-  tab_stubhead(label = "cars") |>
-  cols_hide(columns = "mpg") |>
-  cols_hide(columns = "vs") |>
+  gt(mtcars, rownames_to_stub = TRUE) %>%
+  cols_move_to_start(columns = c("gear", "carb")) %>%
+  tab_stubhead(label = "cars") %>%
+  cols_hide(columns = "mpg") %>%
+  cols_hide(columns = "vs") %>%
   tab_row_group(
     label = "Mercs",
     rows = contains("Merc")
-  ) |>
+  ) %>%
   tab_row_group(
     label = "Mazdas",
     rows = contains("Mazda")
-  ) |>
-  tab_options(row_group.default_label = "Others") |>
+  ) %>%
+  tab_options(row_group.default_label = "Others") %>%
   tab_spanner(
     label = "gear_carb_cyl",
     id = "gcc",
     columns = c(gear, carb, cyl)
-  ) |>
-  row_group_order(groups = c("Mazdas", "Mercs")) |>
+  ) %>%
+  row_group_order(groups = c("Mazdas", "Mercs")) %>%
   cols_merge_range(
     col_begin = "disp",
     col_end = "drat"
-  ) |>
+  ) %>%
   tab_header(
     title = "Title",
     subtitle = "Subtitle"
-  ) |>
-  tab_source_note(source_note = "this is a source note") |>
+  ) %>%
+  tab_source_note(source_note = "this is a source note") %>%
   summary_rows(
     groups = c("Mazdas", "Mercs"),
     columns = c(hp, wt, qsec),
     fns = list(
       ~mean(., na.rm = TRUE),
       ~sum(., na.rm = TRUE))
-  ) |>
+  ) %>%
   grand_summary_rows(
     columns = c(hp, wt),
     fns = list(
@@ -53,7 +53,7 @@ test_that("A gt table can store the correct style statements", {
   # Apply a `lightgray` background color to the columns
   # and stub cells
   tbl_html <-
-    data |>
+    data %>%
     tab_style(
       style = cell_fill(color = "lightgray"),
       locations = list(
@@ -80,7 +80,7 @@ test_that("tab_style() works for styling a single cell.", {
   # Apply a `steelblue` background color with white text to a
   # single stub cell
   tbl_html <-
-    data |>
+    data %>%
     tab_style(
       style = list(
         cell_fill(color = "steelblue"),
@@ -105,11 +105,11 @@ test_that("tab_style() works for styling a single cell.", {
   )
 })
 
-test_that("A table subtitle can be left-aligned", {
+test_that("A table title can be left-aligned", {
 
   # Apply left-alignment to the table title
   tbl_html <-
-    data |>
+    data %>%
     tab_style(
       style = cell_text(align = "left"),
       locations = cells_title(groups = "title")
@@ -128,7 +128,7 @@ test_that("A table subtitle can be left-aligned", {
 test_that("A table subtitle can be left-aligned", {
 
   tbl_html <-
-    data |>
+    data %>%
     tab_style(
       style = cell_text(align = "left"),
       locations = cells_title(groups = "subtitle")
@@ -148,7 +148,7 @@ test_that("A gt table can have a background in the summary.", {
   # Apply a green background with white text to a single cell in
   # a group summary section
   tbl_html <-
-    data |>
+    data %>%
     tab_style(
       style = list(
         cell_fill(color = "green"),
@@ -220,7 +220,7 @@ test_that("tab style works with grand_summary", {
   # Apply a red background with white text to a single cell in
   # the grand summary section
   tbl_html <-
-    data |>
+    data %>%
     tab_style(
       style = list(
         cell_fill(color = "red"),
@@ -233,14 +233,14 @@ test_that("tab style works with grand_summary", {
 
   # Expect that the internal `styles_df` data frame will have
   # a single row
-  dt_styles_get(data = tbl_html) |>
-    nrow() |>
+  dt_styles_get(data = tbl_html) %>%
+    nrow() %>%
     expect_equal(1)
 
   # Expect an error if columns couldn't be resolved
   expect_snapshot(
     error = TRUE,
-    data |>
+    data %>%
       tab_style(
         style = list(
           cell_fill(color = "red"),
@@ -254,7 +254,7 @@ test_that("tab style works with grand_summary", {
   # Expect an error if rows couldn't be resolved
   expect_snapshot(
     error = TRUE,
-    data |>
+    data %>%
       tab_style(
         style = list(
           cell_fill(color = "red"),
@@ -267,7 +267,7 @@ test_that("tab style works with grand_summary", {
 
   # Apply a `yellow` background to the `Mazdas` row group cell
   tbl_html <-
-    data |>
+    data %>%
     tab_style(
       style = cell_fill(color = "yellow"),
       locations = cells_row_groups(groups = "Mazdas")
@@ -275,7 +275,7 @@ test_that("tab style works with grand_summary", {
 
   # Expect that the internal `styles_df` data frame will have
   # a single row
-  dt_styles_get(data = tbl_html) |>
+  dt_styles_get(data = tbl_html) %>%
     expect_1_row()
 })
 
@@ -283,7 +283,7 @@ test_that("tab_style() works with column spanners", {
   # Apply a `lightgreen` background to the `gear_carb_cyl`
   # column spanner cell
   tbl_html <-
-    data |>
+    data %>%
     tab_style(
       style = cell_fill(color = "lightgreen"),
       locations = cells_column_spanners(spanners = "gcc")
@@ -291,14 +291,14 @@ test_that("tab_style() works with column spanners", {
 
   # Expect that the internal `styles_df` data frame will have
   # a single row
-  dt_styles_get(data = tbl_html) |>
+  dt_styles_get(data = tbl_html) %>%
     expect_1_row()
 })
 
 test_that("tab_style() works with a single column label", {
   # Apply a `turquoise` background to a single column label
   tbl_html <-
-    data |>
+    data %>%
     tab_style(
       style = cell_fill(color = "turquoise"),
       locations = cells_column_labels(columns = "gear")
@@ -306,12 +306,12 @@ test_that("tab_style() works with a single column label", {
 
   # Expect that the internal `styles_df` data frame will have
   # a single row
-  dt_styles_get(data = tbl_html) |>
+  dt_styles_get(data = tbl_html) %>%
     expect_1_row()
 
   # Apply a `turquoise` background to a single column label
   tbl_html <-
-    data |>
+    data %>%
     tab_style(
       style = cell_fill(color = "pink"),
       locations = cells_column_labels(columns = "hp")
@@ -319,12 +319,12 @@ test_that("tab_style() works with a single column label", {
 
   # Expect that the internal `styles_df` data frame will have
   # a single row
-  dt_styles_get(data = tbl_html) |>
+  dt_styles_get(data = tbl_html) %>%
     expect_1_row()
 
   # Apply a `lightgray` background to five rows of a single column
   tbl_html <-
-    data |>
+    data %>%
     tab_style(
       style = list(
         cell_fill(color = "lightgray"),
@@ -334,30 +334,30 @@ test_that("tab_style() works with a single column label", {
     )
 
   # Expect that the internal `styles_df` data frame will have five rows
-  dt_styles_get(data = tbl_html) |>
-    nrow() |>
+  dt_styles_get(data = tbl_html) %>%
+    nrow() %>%
     expect_equal(5)
 
   # Expect that the `rownum` values in `styles_df` will be 1:5
-  dt_styles_get(data = tbl_html) |>
-    dplyr::pull(rownum) |>
+  dt_styles_get(data = tbl_html) %>%
+    dplyr::pull(rownum) %>%
     expect_equal(1:5)
 
   # Expect that the `location` in `styles_df` is 'data' for all five rows
-  dt_styles_get(data = tbl_html) |>
-    dplyr::pull(locname) |>
+  dt_styles_get(data = tbl_html) %>%
+    dplyr::pull(locname) %>%
     expect_setequal("data")
 
   # Expect that the `colname` in `styles_df` is 'hp' for all five rows
-  dt_styles_get(data = tbl_html) |>
-    dplyr::pull(colname) |>
+  dt_styles_get(data = tbl_html) %>%
+    dplyr::pull(colname) %>%
     expect_setequal("hp")
 })
 
 test_that("tab_style() works with a single cell", {
   # Apply a `yellow` background a single data cell
   tbl_html <-
-    data |>
+    data %>%
     tab_style(
       style = cell_fill(color = "yellow"),
       locations = cells_body(columns = "disp", rows = "Mazda RX4")
@@ -365,14 +365,14 @@ test_that("tab_style() works with a single cell", {
 
   # Expect that the internal `styles_df` data frame will have
   # a single row
-  dt_styles_get(data = tbl_html) |>
+  dt_styles_get(data = tbl_html) %>%
     expect_1_row()
 
   # Expect an error in `tab_style` when a value for `rows` isn't
   # in the table
   expect_snapshot(
     error = TRUE,
-    data |>
+    data %>%
       tab_style(
         style = cell_fill(color = "yellow"),
         locations = cells_body(columns = "disp", rows = "Mazda RX7")
@@ -381,13 +381,13 @@ test_that("tab_style() works with a single cell", {
 
   # Expect that the internal `styles_df` data frame will have
   # a single row
-  dt_styles_get(data = tbl_html) |>
+  dt_styles_get(data = tbl_html) %>%
     expect_1_row()
 
   # Apply a `yellow` background a single data cell; this time, use `c()`
   # to specify the `columns`
   tbl_html <-
-    data |>
+    data %>%
     tab_style(
       style = cell_fill(color = "yellow"),
       locations = cells_body(columns = c(disp, hp), rows = "Mazda RX4")
@@ -419,50 +419,50 @@ test_that("tab_style() works with a single cell", {
 test_that("Using fonts in `cell_text()` works", {
 
   # Prepare a small gt table for all tests
-  tbl <- exibble |> dplyr::select(char, time) |> gt()
+  tbl <- exibble %>% dplyr::select(char, time) %>% gt()
 
   # Expect that system fonts can be combined with default fonts
   # and set at a specific location
-  tbl |>
+  tbl %>%
     tab_style(
       style = cell_text(font = c("Comic Sans MS", "Menlo", default_fonts())),
       locations = cells_body(columns = time, rows = 1)
-    ) |>
-    as_raw_html() |>
+    ) %>%
+    as_raw_html() %>%
     expect_match(
       "<td headers=\"time\" class=\"gt_row gt_right\" style=\"border-style: none; padding-top: 8px; padding-bottom: 8px; padding-left: 5px; padding-right: 5px; margin: 10px; border-top-style: solid; border-top-width: 1px; border-top-color: #D3D3D3; border-left-style: none; border-left-width: 1px; border-left-color: #D3D3D3; border-right-style: none; border-right-width: 1px; border-right-color: #D3D3D3; vertical-align: middle; overflow-x: hidden; text-align: right; font-variant-numeric: tabular-nums; font-family: 'Comic Sans MS', Menlo, system-ui, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';\" valign=\"middle\" align=\"right\">13:35</td>"
     )
 
   # Expect that a Google Fonts and system fonts can be combined
   # (using a list or `c()`) with default fonts and set at a specific location
-  tbl |>
+  tbl %>%
     tab_style(
       style = cell_text(font = c(google_font(name = "Dancing Script"), default_fonts())),
       locations = cells_body(columns = time, rows = 1)
-    ) |>
-    as_raw_html() |>
+    ) %>%
+    as_raw_html() %>%
     expect_match(
       "<td headers=\"time\" class=\"gt_row gt_right\" style=\"border-style: none; padding-top: 8px; padding-bottom: 8px; padding-left: 5px; padding-right: 5px; margin: 10px; border-top-style: solid; border-top-width: 1px; border-top-color: #D3D3D3; border-left-style: none; border-left-width: 1px; border-left-color: #D3D3D3; border-right-style: none; border-right-width: 1px; border-right-color: #D3D3D3; vertical-align: middle; overflow-x: hidden; text-align: right; font-variant-numeric: tabular-nums; font-family: 'Dancing Script', system-ui, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';\" valign=\"middle\" align=\"right\">13:35</td>"
     )
 
-  tbl |>
+  tbl %>%
     tab_style(
       style = cell_text(font = list(google_font(name = "Dancing Script"), default_fonts())),
       locations = cells_body(columns = time, rows = 1)
-    ) |>
-    as_raw_html() |>
+    ) %>%
+    as_raw_html() %>%
     expect_match(
       "<td headers=\"time\" class=\"gt_row gt_right\" style=\"border-style: none; padding-top: 8px; padding-bottom: 8px; padding-left: 5px; padding-right: 5px; margin: 10px; border-top-style: solid; border-top-width: 1px; border-top-color: #D3D3D3; border-left-style: none; border-left-width: 1px; border-left-color: #D3D3D3; border-right-style: none; border-right-width: 1px; border-right-color: #D3D3D3; vertical-align: middle; overflow-x: hidden; text-align: right; font-variant-numeric: tabular-nums; font-family: 'Dancing Script', system-ui, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';\" valign=\"middle\" align=\"right\">13:35</td>"
     )
 
   gtcars_tbl <-
-    gtcars |>
-    dplyr::filter(ctry_origin == "United Kingdom") |>
-    dplyr::select(mfr, model, year, hp) |>
+    gtcars %>%
+    dplyr::filter(ctry_origin == "United Kingdom") %>%
+    dplyr::select(mfr, model, year, hp) %>%
     gt()
 
   # Expect no difference in output when using styles within a list or without
-  tab1 <- gtcars_tbl |>
+  tab1 <- gtcars_tbl %>%
     tab_style(
       style =
         cell_text(
@@ -472,7 +472,7 @@ test_that("Using fonts in `cell_text()` works", {
         ),
       locations = cells_body(columns = hp, rows = 1:2)
     )
-  tab2 <- gtcars_tbl |>
+  tab2 <- gtcars_tbl %>%
     tab_style(
       style =
         list(
@@ -542,17 +542,17 @@ test_that("Setting white-space options in `cell_text()` works", {
   tbl_ws <-
     dplyr::tibble(
       ws = c("   space   ", "   space", "space   ", " a  b  c  d  e  f")
-    ) |>
+    ) %>%
     gt()
 
   # Expect that the white space `"pre"` style option will be present
   # when using `tab_style(style = cell_text(whitespace = "pre"), ... )`
-  tbl_ws |>
+  tbl_ws %>%
     tab_style(
       style = cell_text(whitespace = "pre"),
       locations = cells_body()
-    ) |>
-    as_raw_html() |>
+    ) %>%
+    as_raw_html() %>%
     expect_match(
       "<td headers=\"ws\" class=\"gt_row gt_left\" style=\"border-style: none; padding-top: 8px; padding-bottom: 8px; padding-left: 5px; padding-right: 5px; margin: 10px; border-top-style: solid; border-top-width: 1px; border-top-color: #D3D3D3; border-left-style: none; border-left-width: 1px; border-left-color: #D3D3D3; border-right-style: none; border-right-width: 1px; border-right-color: #D3D3D3; vertical-align: middle; overflow-x: hidden; text-align: left; white-space: pre;\" valign=\"middle\" align=\"left\">   space   </td>"
     )
@@ -561,28 +561,28 @@ test_that("Setting white-space options in `cell_text()` works", {
 test_that("Hiding columns that have styles does not result in errors/warnings", {
 
   expect_no_error(
-    exibble |>
-      gt() |>
-      tab_style(style = cell_fill(), locations = cells_body(columns = everything())) |>
+    exibble %>%
+      gt() %>%
+      tab_style(style = cell_fill(), locations = cells_body(columns = everything())) %>%
       cols_hide(columns = date)
   )
   expect_no_warning(
-    exibble |>
-      gt() |>
-      tab_style(style = cell_fill(), locations = cells_body(columns = everything())) |>
+    exibble %>%
+      gt() %>%
+      tab_style(style = cell_fill(), locations = cells_body(columns = everything())) %>%
       cols_hide(columns = date)
   )
 
   expect_no_error(
-    exibble |>
-      gt() |>
-      tab_style(style = cell_fill(), locations = cells_body(columns = date)) |>
+    exibble %>%
+      gt() %>%
+      tab_style(style = cell_fill(), locations = cells_body(columns = date)) %>%
       cols_hide(columns = datetime)
   )
   expect_no_warning(
-    exibble |>
-      gt() |>
-      tab_style(style = cell_fill(), locations = cells_body(columns = date)) |>
+    exibble %>%
+      gt() %>%
+      tab_style(style = cell_fill(), locations = cells_body(columns = date)) %>%
       cols_hide(columns = datetime)
   )
 })
@@ -841,8 +841,8 @@ test_that("Using fonts in `from_column()` works within `cell_*()` fns", {
   # Generate a gt table and use `tab_style()` along with `cell_*()`
   # helper functions that in turn use the `from_column()` helper
   gt_tbl_1 <-
-    tab |>
-    gt() |>
+    tab %>%
+    gt() %>%
     tab_style(
       style = list(
         cell_fill(
@@ -866,7 +866,7 @@ test_that("Using fonts in `from_column()` works within `cell_*()` fns", {
     )
 
   # Perform snapshot test
-  gt_tbl_1 |> render_as_html() |> expect_snapshot()
+  gt_tbl_1 %>% render_as_html() %>% expect_snapshot()
 })
 
 

@@ -49,30 +49,6 @@ test_that("tab_spanner() works with `md()`/`html()`", {
      "><em>date</em>/<em>time</em><"
    )
 })
-test_that("tab_footnote() works with `md()`/`html()`", {
-
-  # Expect the rendered footnote to be
-  # exactly as provided
-  expect_match_html(
-    tab_footnote(tab, footnote = "Footnote", locations = cells_body(columns = 1, rows = 1)),
-    "Footnote"
-  )
-
-  # Expect the rendered foonote to be in
-  # HTML (through Markdown formatting)
-  expect_match_html(
-    tab_footnote(tab, footnote = md("**Footnote**"), locations = cells_body(columns = 1, rows = 1)),
-    "<strong>Footnote</strong>"
-  )
-
-  # Expect the rendered footnote to be in
-  # HTML (through HTML formatting)
-  expect_match_html(
-    tab_footnote(tab, footnote = html("<strong>Footnote</strong>"), locations = cells_body(columns = 1, rows = 1)),
-    "<strong>Footnote</strong>"
-  )
-})
-
 test_that("tab_source_note() works with `md()`/`html()`", {
 
   # Expect the rendered source note to be

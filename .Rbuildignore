@@ -83,6 +83,9 @@ tests/testthat/test-fmt_scientific.R
 tests/testthat/test-fmt_spelled_num.R
 tests/testthat/test-fmt_url.R
 
+tests/testthat/test-format_vec.R
+tests/testthat/_snaps/format_vec.md
+
 tests/testthat/test-footer.R
 tests/testthat/_snaps/footer.md
 

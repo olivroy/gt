@@ -1191,7 +1191,7 @@ cells_stub <- function(rows = everything()) {
 #'
 #' @param columns *Columns to target*
 #'
-#'   [`<column-targeting expression>`][rows-columns] // *default:* `everything()`
+#'   `<column-targeting expression>` // *default:* `everything()`
 #'
 #'   The columns to which targeting operations are constrained. Can either
 #'   be a series of column names provided in `c()`, a vector of column indices,
@@ -1200,7 +1200,7 @@ cells_stub <- function(rows = everything()) {
 #'
 #' @param rows *Rows to target*
 #'
-#'   [`<row-targeting expression>`][rows-columns] // *default:* `everything()`
+#'   `<row-targeting expression>` // *default:* `everything()`
 #'
 #'   In conjunction with `columns`, we can specify which of their rows should
 #'   form a constraint for targeting operations. The default [everything()]

@@ -142,8 +142,10 @@
 #' ```r
 #' countrypops |>
 #'   dplyr::select(-contains("code")) |>
-#'   dplyr::filter(country_name == "Uganda") |>
-#'   dplyr::slice_tail(n = 5) |>
+#'   dplyr::filter(
+#'     country_name == "Uganda",
+#'     year %in% 2017:2021
+#'   ) |>
 #'   gt() |>
 #'   cols_label(
 #'     country_name = "Name",
@@ -164,8 +166,10 @@
 #' ```r
 #' countrypops |>
 #'   dplyr::select(-contains("code")) |>
-#'   dplyr::filter(country_name == "Uganda") |>
-#'   dplyr::slice_tail(n = 5) |>
+#'   dplyr::filter(
+#'     country_name == "Uganda",
+#'     year %in% 2017:2021
+#'   ) |>
 #'   gt() |>
 #'   cols_label(
 #'     country_name = md("**Name**"),
@@ -582,7 +586,7 @@ cols_label <- function(
 #' ```r
 #' pizzaplace |>
 #'   dplyr::mutate(month = substr(date, 6, 7)) |>
-#'   dplyr::count(month, name = "pizza_vendute") |>
+#'   dplyr::count(month, name = "pizze_vendute") |>
 #'   dplyr::mutate(frazione_della_quota = pizze_vendute / 4000) |>
 #'   dplyr::mutate(date = paste0("2015/", month, "/01")) |>
 #'   dplyr::select(-month) |>

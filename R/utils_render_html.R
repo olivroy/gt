@@ -1656,13 +1656,14 @@ create_source_notes_component_h <- function(data) {
   # Handle the multiline source notes case (each footnote takes up one line)
   if (multiline) {
     # Create the source notes component as a series of `<tr><td>` (one per
-    # source note) inside of a `<tfoot>`
+    # source note) inside of a `<div>`
     return(
-      htmltools::tags$tfoot(
+      htmltools::tags$div(
         class = "gt_sourcenotes",
         lapply(
           source_notes,
           function(x) {
+            # TODO maybe one of those is not necessary? keep either tr or td?
             htmltools::tags$tr(
               htmltools::tags$td(
                 class = "gt_sourcenote",
@@ -1682,8 +1683,9 @@ create_source_notes_component_h <- function(data) {
   separator <- gsub(" (?= )", "&nbsp;", separator, perl = TRUE)
 
   # Create the source notes component as a single `<tr><td>` inside
-  # of a `<tfoot>`
-  htmltools::tags$tfoot(
+  # of a `<div>`
+  htmltools::tags$div(
+    # TODO maybe one of those is not necessary? keep either tr or td?
     htmltools::tags$tr(
       class = "gt_sourcenotes",
       style = source_notes_styles,
@@ -1780,13 +1782,14 @@ create_footnotes_component_h <- function(data) {
   if (multiline) {
 
     # Create the footnotes component as a series of `<tr><td>` (one per
-    # footnote) inside of a `<tfoot>`
+    # footnote) inside of a `<div>`
     return(
-      htmltools::tags$tfoot(
+      htmltools::tags$div(
         class = "gt_footnotes",
         lapply(
           footnotes,
           function(x) {
+            # TODO maybe one of those is not necessary? keep either tr or td?
             htmltools::tags$tr(
               htmltools::tags$td(
                 class = "gt_footnote",
@@ -1806,10 +1809,11 @@ create_footnotes_component_h <- function(data) {
   separator <- gsub(" (?= )", "&nbsp;", separator, perl = TRUE)
 
   # Create the footnotes component as a single `<tr><td>` inside
-  # of a `<tfoot>`
-  htmltools::tags$tfoot(
+  # of a `<div>`
+  htmltools::tags$div(
     htmltools::tags$tr(
       class = "gt_footnotes",
+      # TODO maybe one of those is not necessary? keep either tr or td?
       style = footnotes_styles,
       htmltools::tags$td(
         class = "gt_footnote",

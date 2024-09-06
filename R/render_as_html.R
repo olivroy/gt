@@ -66,6 +66,17 @@ render_as_html <- function(data) {
   # Create the footnotes component
   footnotes_component <- create_footnotes_component_h(data = data)
 
+  # Create the footer component <tfoot>
+  if (identical(source_notes_component, "") && identical(footnotes_component, "")) {
+    # FIXME Put NULL in next PR
+    footer_component <- "\n  "
+  } else {
+    footer_component <- htmltools::tags$tfoot(
+      source_notes_component,
+      footnotes_component
+    )
+  }
+
   # Get attributes for the gt table
   table_defs <- get_table_defs(data = data)
 
@@ -90,8 +101,7 @@ render_as_html <- function(data) {
     table_defs$table_colgroups,
     table_head,
     body_component,
-    source_notes_component,
-    footnotes_component
+    footer_component
   )
 }
 

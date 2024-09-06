@@ -57,6 +57,8 @@
 
 * Improved footnote rendering in Quarto with `fmt_markdown()` (@olivroy, #1773)
 
+* Improved rendering in Quarto if footnotes and source notes are present (@olivroy, #1296).
+
 # gt 0.11.0
 
 ## New features
